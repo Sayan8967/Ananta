@@ -1,0 +1,24 @@
+replicaCount: 3
+
+image:
+  repository: "ananta-prod-ap-south-1.dkr.ecr.ap-south-1.amazonaws.com/web"
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 15
+  targetCPUUtilizationPercentage: 70
+
+env:
+  NODE_ENV: "production"
+  NEXT_PUBLIC_API_URL: "https://api.ananta.health"
+  NEXT_PUBLIC_AUTH_URL: "https://auth.ananta.health"
+  LOG_LEVEL: "info"

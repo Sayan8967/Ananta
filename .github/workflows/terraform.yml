@@ -1,0 +1,212 @@
+name: "Terraform Plan & Apply"
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "infra/**"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "infra/**"
+
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+
+env:
+  TF_VERSION: "1.7.0"
+  AWS_REGION_DEFAULT: "ap-south-1"
+
+jobs:
+  detect-changes:
+    name: "Detect Changed Stacks"
+    runs-on: ubuntu-latest
+    outputs:
+      stacks: ${{ steps.changes.outputs.stacks }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect changed stacks
+        id: changes
+        run: |
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD -- infra/)
+          else
+            CHANGED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} -- infra/)
+          fi
+
+          STACKS="[]"
+          declare -A STACK_MAP
+
+          # Global stacks
+          for stack in networking dns ecr; do
+            if echo "$CHANGED_FILES" | grep -q "infra/aws/ananta-global/.*${stack}\|infra/aws/ananta-global/modules/"; then
+              STACK_MAP["global-${stack}"]=1
+            fi
+          done
+
+          # Platform stacks
+          for stack in compute database cache storage; do
+            if echo "$CHANGED_FILES" | grep -q "infra/aws/ananta-platform/.*${stack}\|infra/aws/ananta-platform/modules/"; then
+              STACK_MAP["platform-${stack}"]=1
+            fi
+          done
+
+          # Environment configs trigger all platform stacks
+          if echo "$CHANGED_FILES" | grep -q "infra/environments/"; then
+            for stack in compute database cache storage; do
+              STACK_MAP["platform-${stack}"]=1
+            done
+          fi
+
+          STACKS=$(printf '%s\n' "${!STACK_MAP[@]}" | jq -R -s -c 'split("\n") | map(select(. != ""))')
+          echo "stacks=${STACKS}" >> "$GITHUB_OUTPUT"
+          echo "Changed stacks: ${STACKS}"
+
+  terraform-plan:
+    name: "Plan: ${{ matrix.environment }} / ${{ matrix.stack }}"
+    needs: detect-changes
+    if: needs.detect-changes.outputs.stacks != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        environment:
+          - dev-ap-south-1
+        stack: ${{ fromJson(needs.detect-changes.outputs.stacks) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION_DEFAULT }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Set stack directory
+        id: stack-dir
+        run: |
+          STACK="${{ matrix.stack }}"
+          if [[ "$STACK" == global-* ]]; then
+            STACK_NAME="${STACK#global-}"
+            STACK_DIR="infra/aws/ananta-global/stacks/${STACK_NAME}"
+          else
+            STACK_NAME="${STACK#platform-}"
+            STACK_DIR="infra/aws/ananta-platform/stacks/${STACK_NAME}"
+          fi
+          echo "dir=${STACK_DIR}" >> "$GITHUB_OUTPUT"
+          echo "Stack directory: ${STACK_DIR}"
+
+      - name: Terraform Init
+        working-directory: ${{ steps.stack-dir.outputs.dir }}
+        run: |
+          terraform init \
+            -backend-config="../../environments/${{ matrix.environment }}/backend.tf"
+
+      - name: Terraform Validate
+        working-directory: ${{ steps.stack-dir.outputs.dir }}
+        run: terraform validate
+
+      - name: Terraform Plan
+        working-directory: ${{ steps.stack-dir.outputs.dir }}
+        run: |
+          terraform plan \
+            -var-file="../../../environments/${{ matrix.environment }}/terraform.tfvars" \
+            -out=tfplan \
+            -no-color
+        continue-on-error: true
+
+      - name: Comment Plan on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { execSync } = require('child_process');
+            const plan = execSync(
+              `cd ${{ steps.stack-dir.outputs.dir }} && terraform show -no-color tfplan`
+            ).toString().substring(0, 60000);
+
+            const body = `### Terraform Plan: \`${{ matrix.stack }}\` / \`${{ matrix.environment }}\`
+
+            \`\`\`
+            ${plan}
+            \`\`\`
+
+            *Pushed by: @${{ github.actor }}*`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
+
+  terraform-apply:
+    name: "Apply: ${{ matrix.environment }} / ${{ matrix.stack }}"
+    needs:
+      - detect-changes
+      - terraform-plan
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment: ${{ matrix.environment }}
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        environment:
+          - dev-ap-south-1
+        stack: ${{ fromJson(needs.detect-changes.outputs.stacks) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION_DEFAULT }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Set stack directory
+        id: stack-dir
+        run: |
+          STACK="${{ matrix.stack }}"
+          if [[ "$STACK" == global-* ]]; then
+            STACK_NAME="${STACK#global-}"
+            STACK_DIR="infra/aws/ananta-global/stacks/${STACK_NAME}"
+          else
+            STACK_NAME="${STACK#platform-}"
+            STACK_DIR="infra/aws/ananta-platform/stacks/${STACK_NAME}"
+          fi
+          echo "dir=${STACK_DIR}" >> "$GITHUB_OUTPUT"
+
+      - name: Terraform Init
+        working-directory: ${{ steps.stack-dir.outputs.dir }}
+        run: |
+          terraform init \
+            -backend-config="../../environments/${{ matrix.environment }}/backend.tf"
+
+      - name: Terraform Apply
+        working-directory: ${{ steps.stack-dir.outputs.dir }}
+        run: |
+          terraform apply \
+            -var-file="../../../environments/${{ matrix.environment }}/terraform.tfvars" \
+            -auto-approve \
+            -no-color

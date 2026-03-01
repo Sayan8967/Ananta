@@ -1,0 +1,25 @@
+replicaCount: 3
+
+image:
+  repository: "ananta-prod-us-east-1.dkr.ecr.us-east-1.amazonaws.com/auth-service"
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 15
+  targetCPUUtilizationPercentage: 70
+
+env:
+  NODE_ENV: "production"
+  DATABASE_URL: "postgresql://ananta:ananta-prod@auth-db-prod.us-east-1.rds.amazonaws.com:5432/auth_service"
+  REDIS_URL: "redis://redis-prod.us-east-1.cache.amazonaws.com:6379"
+  LOG_LEVEL: "info"
+  KEYCLOAK_URL: "http://keycloak.ananta-prod.svc.cluster.local:8080"

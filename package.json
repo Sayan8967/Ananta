@@ -1,0 +1,27 @@
+{
+  "name": "ananta",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Ananta — Infinite Care, Infinite Memory. Lifetime medical history platform.",
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "test": "turbo test",
+    "clean": "turbo clean",
+    "db:migrate": "pnpm --filter @ananta/db-client migrate",
+    "db:generate": "pnpm --filter @ananta/db-client generate",
+    "docker:infra": "docker compose -f docker-compose.infra.yml up -d",
+    "docker:infra:down": "docker compose -f docker-compose.infra.yml down",
+    "docker:dev": "docker compose up -d",
+    "docker:dev:down": "docker compose down"
+  },
+  "packageManager": "pnpm@10.30.3",
+  "devDependencies": {
+    "turbo": "^2.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  }
+}

@@ -1,0 +1,145 @@
+{
+  "realm": "ananta",
+  "enabled": true,
+  "displayName": "Ananta Health Platform",
+  "registrationAllowed": true,
+  "registrationEmailAsUsername": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": true,
+  "permanentLockout": false,
+  "maxFailureWaitSeconds": 900,
+  "minimumQuickLoginWaitSeconds": 60,
+  "waitIncrementSeconds": 60,
+  "quickLoginCheckMilliSeconds": 1000,
+  "maxDeltaTimeSeconds": 43200,
+  "failureFactor": 5,
+  "roles": {
+    "realm": [
+      { "name": "patient", "description": "Patient user" },
+      { "name": "doctor", "description": "Healthcare provider" },
+      { "name": "admin", "description": "System administrator" },
+      { "name": "emergency-responder", "description": "Emergency responder with limited access" },
+      { "name": "nurse", "description": "Nurse or clinical assistant" }
+    ],
+    "client": {
+      "ananta-backend": [
+        { "name": "patient:read", "description": "Read patient data" },
+        { "name": "patient:write", "description": "Write patient data" },
+        { "name": "records:read", "description": "Read medical records" },
+        { "name": "records:write", "description": "Write medical records" },
+        { "name": "emergency:read", "description": "Read emergency card" },
+        { "name": "consent:manage", "description": "Manage consents" },
+        { "name": "notes:write", "description": "Write clinical notes" },
+        { "name": "admin:full", "description": "Full admin access" }
+      ]
+    }
+  },
+  "clients": [
+    {
+      "clientId": "ananta-web",
+      "name": "Ananta Web Application",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "rootUrl": "http://localhost:3000",
+      "baseUrl": "/",
+      "redirectUris": [
+        "http://localhost:3000/*",
+        "https://*.ananta.health/*"
+      ],
+      "webOrigins": [
+        "http://localhost:3000",
+        "https://*.ananta.health"
+      ],
+      "defaultClientScopes": ["openid", "profile", "email"],
+      "optionalClientScopes": ["offline_access"],
+      "protocol": "openid-connect",
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      }
+    },
+    {
+      "clientId": "ananta-mobile",
+      "name": "Ananta Mobile Application",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": [
+        "ananta://callback",
+        "exp://*/--/callback"
+      ],
+      "defaultClientScopes": ["openid", "profile", "email"],
+      "protocol": "openid-connect",
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      }
+    },
+    {
+      "clientId": "ananta-backend",
+      "name": "Ananta Backend Services",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "dev-secret",
+      "bearerOnly": true,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
+      "defaultClientScopes": ["openid"],
+      "protocol": "openid-connect"
+    }
+  ],
+  "users": [
+    {
+      "username": "patient-demo",
+      "email": "patient@demo.ananta.health",
+      "firstName": "Arjun",
+      "lastName": "Sharma",
+      "enabled": true,
+      "credentials": [{ "type": "password", "value": "demo123", "temporary": false }],
+      "realmRoles": ["patient"],
+      "clientRoles": {
+        "ananta-backend": ["patient:read", "patient:write", "records:read", "records:write", "consent:manage"]
+      }
+    },
+    {
+      "username": "doctor-demo",
+      "email": "doctor@demo.ananta.health",
+      "firstName": "Dr. Priya",
+      "lastName": "Patel",
+      "enabled": true,
+      "credentials": [{ "type": "password", "value": "demo123", "temporary": false }],
+      "realmRoles": ["doctor"],
+      "clientRoles": {
+        "ananta-backend": ["patient:read", "records:read", "records:write", "notes:write"]
+      }
+    },
+    {
+      "username": "admin-demo",
+      "email": "admin@demo.ananta.health",
+      "firstName": "Admin",
+      "lastName": "User",
+      "enabled": true,
+      "credentials": [{ "type": "password", "value": "demo123", "temporary": false }],
+      "realmRoles": ["admin"],
+      "clientRoles": {
+        "ananta-backend": ["admin:full"]
+      }
+    }
+  ],
+  "scopeMappings": [
+    {
+      "clientScope": "openid",
+      "roles": ["patient", "doctor", "admin", "emergency-responder", "nurse"]
+    }
+  ],
+  "clientScopeMappings": {},
+  "sslRequired": "none",
+  "accessTokenLifespan": 3600,
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 36000
+}

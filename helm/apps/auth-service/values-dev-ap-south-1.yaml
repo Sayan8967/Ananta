@@ -1,0 +1,23 @@
+replicaCount: 1
+
+image:
+  repository: "ananta-dev-ap-south-1.dkr.ecr.ap-south-1.amazonaws.com/auth-service"
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+autoscaling:
+  enabled: false
+
+env:
+  NODE_ENV: "development"
+  DATABASE_URL: "postgresql://ananta:ananta-dev@auth-db-dev.ap-south-1.rds.amazonaws.com:5432/auth_service"
+  REDIS_URL: "redis://redis-dev.ap-south-1.cache.amazonaws.com:6379"
+  LOG_LEVEL: "debug"
+  KEYCLOAK_URL: "http://keycloak.ananta-dev.svc.cluster.local:8080"
+  JWT_SECRET: "dev-jwt-secret-change-me"

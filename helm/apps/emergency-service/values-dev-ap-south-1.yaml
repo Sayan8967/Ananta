@@ -1,0 +1,23 @@
+replicaCount: 1
+
+image:
+  repository: "ananta-dev-ap-south-1.dkr.ecr.ap-south-1.amazonaws.com/emergency-service"
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+autoscaling:
+  enabled: false
+
+env:
+  NODE_ENV: "development"
+  DATABASE_URL: "postgresql://ananta:ananta-dev@emergency-db-dev.ap-south-1.rds.amazonaws.com:5432/emergency_service"
+  REDIS_URL: "redis://redis-dev.ap-south-1.cache.amazonaws.com:6379"
+  LOG_LEVEL: "debug"
+  AUTH_SERVICE_URL: "http://auth-service.ananta-dev.svc.cluster.local:3004"
+  PATIENT_SERVICE_URL: "http://patient-service.ananta-dev.svc.cluster.local:3001"

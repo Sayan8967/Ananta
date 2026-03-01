@@ -1,0 +1,90 @@
+name: Test
+
+on:
+  push:
+    branches: [main, 'dev-*', 'prod-*']
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit-tests:
+    name: Unit Tests (Shared Packages)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm turbo test --filter=@ananta/fhir-models --filter=@ananta/auth-client
+
+  service-tests:
+    name: Service Tests (Backend)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm turbo test --filter=@ananta/patient-service --filter=@ananta/doctor-service --filter=@ananta/emergency-service --filter=@ananta/auth-service
+
+  ai-tests:
+    name: AI Service Tests (Python)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app/services/ai-service
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt -r requirements-dev.txt
+      - run: pytest tests/ -v
+
+  web-tests:
+    name: Web Tests (Frontend)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @ananta/web test
+
+  helm-validate:
+    name: Helm Chart Validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v4
+        with:
+          version: v3.15.0
+      - run: |
+          for chart in helm/apps/*/; do
+            echo "Linting $chart..."
+            helm lint "$chart" || exit 1
+          done
+      - run: |
+          for chart in helm/apps/*/; do
+            echo "Templating $chart..."
+            helm template test "$chart" || exit 1
+          done

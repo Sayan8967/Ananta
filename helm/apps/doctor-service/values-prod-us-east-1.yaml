@@ -1,0 +1,25 @@
+replicaCount: 3
+
+image:
+  repository: "ananta-prod-us-east-1.dkr.ecr.us-east-1.amazonaws.com/doctor-service"
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 15
+  targetCPUUtilizationPercentage: 70
+
+env:
+  NODE_ENV: "production"
+  DATABASE_URL: "postgresql://ananta:ananta-prod@doctor-db-prod.us-east-1.rds.amazonaws.com:5432/doctor_service"
+  REDIS_URL: "redis://redis-prod.us-east-1.cache.amazonaws.com:6379"
+  LOG_LEVEL: "info"
+  AUTH_SERVICE_URL: "http://auth-service.ananta-prod.svc.cluster.local:3004"

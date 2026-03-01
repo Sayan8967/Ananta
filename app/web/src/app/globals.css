@@ -1,0 +1,160 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* shadcn/ui light theme variables */
+    --background: 0 0% 100%;
+    --foreground: 215 28% 17%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 215 28% 17%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 28% 17%;
+
+    /* Primary: Ananta deep blue (#1e3a5f) -> HSL 213 52% 24% */
+    --primary: 213 52% 24%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 215 28% 17%;
+
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+
+    /* Accent: Ananta teal (#0d9488) -> HSL 175 84% 32% */
+    --accent: 175 84% 32%;
+    --accent-foreground: 0 0% 100%;
+
+    /* Destructive: Ananta emergency red (#dc2626) -> HSL 0 84% 50% */
+    --destructive: 0 84% 50%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 213 52% 24%;
+
+    --radius: 0.5rem;
+
+    /* Ananta custom properties */
+    --ananta-primary: #1e3a5f;
+    --ananta-accent: #0d9488;
+    --ananta-emergency: #dc2626;
+    --ananta-success: #16a34a;
+    --ananta-warning: #f59e0b;
+
+    /* Ananta gradients */
+    --ananta-gradient-primary: linear-gradient(135deg, #1e3a5f 0%, #2d5a8e 100%);
+    --ananta-gradient-accent: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%);
+    --ananta-gradient-hero: linear-gradient(135deg, #1e3a5f 0%, #0d9488 50%, #14b8a6 100%);
+    --ananta-gradient-emergency: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+
+    /* Spacing and sizing tokens */
+    --ananta-header-height: 4rem;
+    --ananta-sidebar-width: 16rem;
+    --ananta-sidebar-collapsed-width: 4rem;
+  }
+
+  .dark {
+    --background: 215 28% 7%;
+    --foreground: 210 40% 98%;
+
+    --card: 215 28% 10%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 215 28% 10%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 213 52% 40%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 215 28% 14%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 215 28% 14%;
+    --muted-foreground: 215 16% 65%;
+
+    --accent: 175 84% 40%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 215 28% 18%;
+    --input: 215 28% 18%;
+    --ring: 213 52% 40%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Focus visible styles for accessibility */
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Selection color */
+  ::selection {
+    background-color: hsl(var(--primary) / 0.2);
+  }
+}
+
+@layer utilities {
+  /* Ananta utility classes */
+  .ananta-gradient-text {
+    @apply bg-clip-text text-transparent;
+    background-image: var(--ananta-gradient-hero);
+  }
+
+  .ananta-card-shadow {
+    box-shadow:
+      0 1px 3px 0 rgb(0 0 0 / 0.1),
+      0 1px 2px -1px rgb(0 0 0 / 0.1);
+  }
+
+  .ananta-card-shadow-lg {
+    box-shadow:
+      0 10px 15px -3px rgb(0 0 0 / 0.1),
+      0 4px 6px -4px rgb(0 0 0 / 0.1);
+  }
+
+  /* Hide scrollbar while keeping scroll functionality */
+  .scrollbar-hidden {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hidden::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Emergency mode pulsing border */
+  .emergency-pulse {
+    animation: emergency-border-pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes emergency-border-pulse {
+    0%,
+    100% {
+      border-color: hsl(var(--destructive));
+    }
+    50% {
+      border-color: hsl(var(--destructive) / 0.4);
+    }
+  }
+}

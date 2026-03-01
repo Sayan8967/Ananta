@@ -1,0 +1,26 @@
+replicaCount: 3
+
+image:
+  repository: "ananta-prod-us-east-1.dkr.ecr.us-east-1.amazonaws.com/keycloak"
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 15
+  targetCPUUtilizationPercentage: 70
+
+env:
+  KC_DB: "postgres"
+  KC_DB_URL: "jdbc:postgresql://keycloak-db-prod.us-east-1.rds.amazonaws.com:5432/keycloak"
+  KC_DB_USERNAME: "keycloak"
+  KC_HOSTNAME: "auth-us.ananta.health"
+  KC_PROXY: "edge"
+  KC_LOG_LEVEL: "INFO"

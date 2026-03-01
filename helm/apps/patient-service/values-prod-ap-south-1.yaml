@@ -1,0 +1,25 @@
+replicaCount: 3
+
+image:
+  repository: "ananta-prod-ap-south-1.dkr.ecr.ap-south-1.amazonaws.com/patient-service"
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 15
+  targetCPUUtilizationPercentage: 70
+
+env:
+  NODE_ENV: "production"
+  DATABASE_URL: "postgresql://ananta:ananta-prod@patient-db-prod.ap-south-1.rds.amazonaws.com:5432/patient_service"
+  REDIS_URL: "redis://redis-prod.ap-south-1.cache.amazonaws.com:6379"
+  LOG_LEVEL: "info"
+  AUTH_SERVICE_URL: "http://auth-service.ananta-prod.svc.cluster.local:3004"

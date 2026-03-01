@@ -1,0 +1,49 @@
+{
+  "expo": {
+    "name": "Ananta Health",
+    "slug": "ananta-health",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1E40AF"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.ananta.health",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Ananta needs camera access to scan prescriptions and medical documents.",
+        "NSPhotoLibraryUsageDescription": "Ananta needs photo library access to upload medical documents."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#1E40AF"
+      },
+      "package": "com.ananta.health",
+      "permissions": ["android.permission.CAMERA"]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "scheme": "ananta",
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-camera",
+        { "cameraPermission": "Allow Ananta to access your camera to scan prescriptions." }
+      ],
+      [
+        "expo-image-picker",
+        { "photosPermission": "Allow Ananta to access your photos to upload medical documents." }
+      ]
+    ]
+  }
+}

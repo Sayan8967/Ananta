@@ -1,0 +1,179 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ananta-postgres
+    environment:
+      POSTGRES_DB: ananta
+      POSTGRES_USER: ananta
+      POSTGRES_PASSWORD: ananta_dev_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ananta"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mongodb:
+    image: mongo:7
+    container_name: ananta-mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ananta
+      MONGO_INITDB_ROOT_PASSWORD: ananta_dev_password
+      MONGO_INITDB_DATABASE: ananta
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: ananta-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0
+    container_name: ananta-keycloak
+    command: start-dev --import-realm
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/ananta
+      KC_DB_USERNAME: ananta
+      KC_DB_PASSWORD: ananta_dev_password
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./app/services/auth-service/keycloak:/opt/keycloak/data/import
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  patient-service:
+    build:
+      context: .
+      dockerfile: app/services/patient-service/Dockerfile
+    container_name: ananta-patient-service
+    environment:
+      NODE_ENV: development
+      PORT: "3001"
+      DATABASE_URL: postgresql://ananta:ananta_dev_password@postgres:5432/ananta
+      MONGODB_URI: mongodb://ananta:ananta_dev_password@mongodb:27017/ananta?authSource=admin
+      REDIS_URL: redis://redis:6379
+      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_REALM: ananta
+    ports:
+      - "3001:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  doctor-service:
+    build:
+      context: .
+      dockerfile: app/services/doctor-service/Dockerfile
+    container_name: ananta-doctor-service
+    environment:
+      NODE_ENV: development
+      PORT: "3002"
+      DATABASE_URL: postgresql://ananta:ananta_dev_password@postgres:5432/ananta
+      MONGODB_URI: mongodb://ananta:ananta_dev_password@mongodb:27017/ananta?authSource=admin
+      REDIS_URL: redis://redis:6379
+      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_REALM: ananta
+    ports:
+      - "3002:3002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  emergency-service:
+    build:
+      context: .
+      dockerfile: app/services/emergency-service/Dockerfile
+    container_name: ananta-emergency-service
+    environment:
+      NODE_ENV: development
+      PORT: "3003"
+      DATABASE_URL: postgresql://ananta:ananta_dev_password@postgres:5432/ananta
+      REDIS_URL: redis://redis:6379
+    ports:
+      - "3003:3003"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: app/services/auth-service/Dockerfile
+    container_name: ananta-auth-service
+    environment:
+      NODE_ENV: development
+      PORT: "3004"
+      DATABASE_URL: postgresql://ananta:ananta_dev_password@postgres:5432/ananta
+      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_REALM: ananta
+      KEYCLOAK_CLIENT_ID: ananta-backend
+      KEYCLOAK_CLIENT_SECRET: dev-secret
+    ports:
+      - "3004:3004"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+
+  ai-service:
+    build:
+      context: app/services/ai-service
+      dockerfile: Dockerfile
+    container_name: ananta-ai-service
+    environment:
+      PORT: "3005"
+      LOG_LEVEL: debug
+    ports:
+      - "3005:3005"
+
+  web:
+    build:
+      context: .
+      dockerfile: app/web/Dockerfile
+    container_name: ananta-web
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+      NEXT_PUBLIC_KEYCLOAK_URL: http://localhost:8080
+      NEXT_PUBLIC_KEYCLOAK_REALM: ananta
+      NEXT_PUBLIC_KEYCLOAK_CLIENT_ID: ananta-web
+    ports:
+      - "3000:3000"
+    depends_on:
+      - patient-service
+      - doctor-service
+      - emergency-service
+      - auth-service
+
+volumes:
+  postgres_data:
+  mongodb_data:
+  redis_data:

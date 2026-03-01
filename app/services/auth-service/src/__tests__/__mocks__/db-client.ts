@@ -1,0 +1,14 @@
+export const connectMongo = async () => {};
+export const getDb = () => ({});
+export const getMongoDb = () => ({});
+export const getRedis = () => ({ get: async () => null, set: async () => 'OK', del: async () => 0 });
+export const patients = {};
+export const conditions = {};
+export const medicationStatements = {};
+export const allergyIntolerances = {};
+export const immunizations = {};
+export const prescriptions = {};
+export const emergencyCards = {};
+export const auditLog = {};
+export const consents = {};
+export const clinicalNotes = {};

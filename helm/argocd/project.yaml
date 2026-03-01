@@ -1,0 +1,52 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: ananta
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  description: Ananta Medical Platform
+
+  sourceRepos:
+    - "https://github.com/*/Ananta.git"
+
+  destinations:
+    - namespace: ananta-dev
+      server: https://kubernetes.default.svc
+    - namespace: ananta-prod
+      server: https://kubernetes.default.svc
+    - namespace: ananta-dev
+      server: "*"
+    - namespace: ananta-prod
+      server: "*"
+
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+
+  namespaceResourceWhitelist:
+    - group: ""
+      kind: "*"
+    - group: apps
+      kind: "*"
+    - group: autoscaling
+      kind: "*"
+    - group: networking.k8s.io
+      kind: "*"
+
+  roles:
+    - name: admin
+      description: Full access to Ananta project
+      policies:
+        - p, proj:ananta:admin, applications, *, ananta/*, allow
+      groups:
+        - ananta-admins
+
+    - name: developer
+      description: Read-only access with sync for dev
+      policies:
+        - p, proj:ananta:developer, applications, get, ananta/*, allow
+        - p, proj:ananta:developer, applications, sync, ananta/*-dev-*, allow
+      groups:
+        - ananta-developers

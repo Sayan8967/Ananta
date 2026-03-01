@@ -1,0 +1,21 @@
+replicaCount: 1
+
+image:
+  repository: "ananta-dev-ap-south-1.dkr.ecr.ap-south-1.amazonaws.com/web"
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+autoscaling:
+  enabled: false
+
+env:
+  NODE_ENV: "development"
+  NEXT_PUBLIC_API_URL: "https://api-dev.ananta.health"
+  NEXT_PUBLIC_AUTH_URL: "https://auth-dev.ananta.health"
+  LOG_LEVEL: "debug"

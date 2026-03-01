@@ -1,0 +1,97 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# Turbo
+.turbo/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# Test coverage
+coverage/
+.vitest/
+.nyc_output/
+htmlcov/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+*.tfplan
+crash.log
+
+# Terraform - KEEP tfvars templates, IGNORE actual secrets
+terraform.tfvars
+*.auto.tfvars
+# Note: environments/*.tfvars are version controlled (no secrets)
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# React Native / Expo
+.expo/
+android/
+ios/
+*.jks
+*.keystore
+
+# Docker
+*.pid
+
+# Claude Code
+.claude/plans/
+.claude/projects/
+
+# Deploy secrets
+deploy/.env
+deploy/nginx/certs/
+deploy/terraform/*.pem
+deploy/terraform/.terraform/
+deploy/terraform/*.tfstate
+deploy/terraform/*.tfstate.*
+deploy/terraform/.terraform.lock.hcl
+
+# Secrets - NEVER commit these
+*.pem
+*.key
+*.p12
+*.pfx
+credentials.json
+service-account.json
