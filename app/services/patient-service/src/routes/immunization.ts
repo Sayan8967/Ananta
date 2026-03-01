@@ -1,4 +1,4 @@
-import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import type { FastifyInstance } from 'fastify';
 import { checkRole, ROLES } from '@ananta/auth-client';
 import { ImmunizationService } from '../services/immunization-service.js';
 import { z } from 'zod';
@@ -18,23 +18,23 @@ const immunizationSchema = z.object({
 export async function immunizationRoutes(app: FastifyInstance) {
   const service = new ImmunizationService();
 
-  app.post('/:patientId/immunizations', {
+  app.post<{ Params: { patientId: string } }>('/:patientId/immunizations', {
     preHandler: [checkRole(ROLES.PATIENT, ROLES.DOCTOR, ROLES.ADMIN)],
-  }, async (request: FastifyRequest<{ Params: { patientId: string } }>, reply: FastifyReply) => {
+  }, async (request, reply) => {
     const body = immunizationSchema.parse(request.body);
     const immunization = await service.create(request.params.patientId, body, request.user!.sub);
     reply.code(201).send(immunization);
   });
 
-  app.get('/:patientId/immunizations', {
+  app.get<{ Params: { patientId: string } }>('/:patientId/immunizations', {
     preHandler: [checkRole(ROLES.PATIENT, ROLES.DOCTOR, ROLES.ADMIN)],
-  }, async (request: FastifyRequest<{ Params: { patientId: string } }>) => {
+  }, async (request) => {
     return service.listByPatient(request.params.patientId);
   });
 
-  app.get('/:patientId/immunizations/:id', {
+  app.get<{ Params: { patientId: string; id: string } }>('/:patientId/immunizations/:id', {
     preHandler: [checkRole(ROLES.PATIENT, ROLES.DOCTOR, ROLES.ADMIN)],
-  }, async (request: FastifyRequest<{ Params: { patientId: string; id: string } }>, reply: FastifyReply) => {
+  }, async (request, reply) => {
     const imm = await service.getById(request.params.id);
     if (!imm) {
       reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'Immunization not found' } });
@@ -43,9 +43,9 @@ export async function immunizationRoutes(app: FastifyInstance) {
     return imm;
   });
 
-  app.put('/:patientId/immunizations/:id', {
+  app.put<{ Params: { patientId: string; id: string } }>('/:patientId/immunizations/:id', {
     preHandler: [checkRole(ROLES.PATIENT, ROLES.DOCTOR, ROLES.ADMIN)],
-  }, async (request: FastifyRequest<{ Params: { patientId: string; id: string } }>, reply: FastifyReply) => {
+  }, async (request, reply) => {
     const body = immunizationSchema.partial().parse(request.body);
     const imm = await service.update(request.params.id, body);
     if (!imm) {
@@ -55,9 +55,9 @@ export async function immunizationRoutes(app: FastifyInstance) {
     return imm;
   });
 
-  app.delete('/:patientId/immunizations/:id', {
+  app.delete<{ Params: { patientId: string; id: string } }>('/:patientId/immunizations/:id', {
     preHandler: [checkRole(ROLES.PATIENT, ROLES.DOCTOR, ROLES.ADMIN)],
-  }, async (request: FastifyRequest<{ Params: { patientId: string; id: string } }>, reply: FastifyReply) => {
+  }, async (request, reply) => {
     await service.delete(request.params.id);
     reply.code(204).send();
   });

@@ -65,7 +65,7 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
 
       {/* Main content */}
       <div className="lg:pl-64">
-        <Header onMenuToggle={() => setSidebarOpen(!sidebarOpen)} portalName="Doctor Portal" />
+        <Header />
         <main className="p-6">{children}</main>
       </div>
     </div>

@@ -1,7 +1,7 @@
-import type { FastifyInstance, FastifyRequest } from 'fastify';
+import type { FastifyInstance } from 'fastify';
 
 export async function sessionRoutes(app: FastifyInstance) {
-  app.get('/session', async (request: FastifyRequest) => {
+  app.get('/session', async (request) => {
     if (!request.user) return { authenticated: false };
     return {
       authenticated: true,

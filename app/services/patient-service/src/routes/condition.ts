@@ -1,4 +1,4 @@
-import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import type { FastifyInstance } from 'fastify';
 import { checkRole, ROLES } from '@ananta/auth-client';
 import { ConditionService } from '../services/condition-service.js';
 import { z } from 'zod';
@@ -17,23 +17,23 @@ const conditionSchema = z.object({
 export async function conditionRoutes(app: FastifyInstance) {
   const service = new ConditionService();
 
-  app.post('/:patientId/conditions', {
+  app.post<{ Params: { patientId: string } }>('/:patientId/conditions', {
     preHandler: [checkRole(ROLES.PATIENT, ROLES.DOCTOR, ROLES.ADMIN)],
-  }, async (request: FastifyRequest<{ Params: { patientId: string } }>, reply: FastifyReply) => {
+  }, async (request, reply) => {
     const body = conditionSchema.parse(request.body);
     const condition = await service.create(request.params.patientId, body, request.user!.sub);
     reply.code(201).send(condition);
   });
 
-  app.get('/:patientId/conditions', {
+  app.get<{ Params: { patientId: string }; Querystring: { status?: string } }>('/:patientId/conditions', {
     preHandler: [checkRole(ROLES.PATIENT, ROLES.DOCTOR, ROLES.ADMIN)],
-  }, async (request: FastifyRequest<{ Params: { patientId: string }; Querystring: { status?: string } }>) => {
+  }, async (request) => {
     return service.listByPatient(request.params.patientId, request.query.status);
   });
 
-  app.get('/:patientId/conditions/:id', {
+  app.get<{ Params: { patientId: string; id: string } }>('/:patientId/conditions/:id', {
     preHandler: [checkRole(ROLES.PATIENT, ROLES.DOCTOR, ROLES.ADMIN)],
-  }, async (request: FastifyRequest<{ Params: { patientId: string; id: string } }>, reply: FastifyReply) => {
+  }, async (request, reply) => {
     const condition = await service.getById(request.params.id);
     if (!condition) {
       reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'Condition not found' } });
@@ -42,9 +42,9 @@ export async function conditionRoutes(app: FastifyInstance) {
     return condition;
   });
 
-  app.put('/:patientId/conditions/:id', {
+  app.put<{ Params: { patientId: string; id: string } }>('/:patientId/conditions/:id', {
     preHandler: [checkRole(ROLES.PATIENT, ROLES.DOCTOR, ROLES.ADMIN)],
-  }, async (request: FastifyRequest<{ Params: { patientId: string; id: string } }>, reply: FastifyReply) => {
+  }, async (request, reply) => {
     const body = conditionSchema.partial().parse(request.body);
     const condition = await service.update(request.params.id, body);
     if (!condition) {
@@ -54,9 +54,9 @@ export async function conditionRoutes(app: FastifyInstance) {
     return condition;
   });
 
-  app.delete('/:patientId/conditions/:id', {
+  app.delete<{ Params: { patientId: string; id: string } }>('/:patientId/conditions/:id', {
     preHandler: [checkRole(ROLES.PATIENT, ROLES.DOCTOR, ROLES.ADMIN)],
-  }, async (request: FastifyRequest<{ Params: { patientId: string; id: string } }>, reply: FastifyReply) => {
+  }, async (request, reply) => {
     await service.delete(request.params.id);
     reply.code(204).send();
   });

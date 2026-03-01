@@ -1,4 +1,4 @@
-import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import type { FastifyInstance } from 'fastify';
 import { checkRole, ROLES } from '@ananta/auth-client';
 import { PatientSummaryService } from '../services/patient-summary-service.js';
 import { ilike, or, sql } from 'drizzle-orm';
@@ -8,11 +8,11 @@ export async function patientLookupRoutes(app: FastifyInstance) {
   const summaryService = new PatientSummaryService();
 
   // GET /api/v1/doctor/patients/search - Search patients (doctor/admin only)
-  app.get('/patients/search', {
-    preHandler: [checkRole(ROLES.DOCTOR, ROLES.ADMIN)],
-  }, async (request: FastifyRequest<{
+  app.get<{
     Querystring: { q?: string; phone?: string; limit?: string };
-  }>, reply: FastifyReply) => {
+  }>('/patients/search', {
+    preHandler: [checkRole(ROLES.DOCTOR, ROLES.ADMIN)],
+  }, async (request, reply) => {
     const { q, phone, limit = '10' } = request.query;
     const maxLimit = Math.min(parseInt(limit, 10) || 10, 50);
     const db = getDb();
@@ -67,9 +67,9 @@ export async function patientLookupRoutes(app: FastifyInstance) {
   });
 
   // GET /api/v1/doctor/patients/:patientId/summary - AI-generated patient summary
-  app.get('/patients/:patientId/summary', {
+  app.get<{ Params: { patientId: string } }>('/patients/:patientId/summary', {
     preHandler: [checkRole(ROLES.DOCTOR, ROLES.ADMIN)],
-  }, async (request: FastifyRequest<{ Params: { patientId: string } }>, reply: FastifyReply) => {
+  }, async (request, reply) => {
     const summary = await summaryService.generateSummary(request.params.patientId);
     if (!summary) {
       reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'Patient not found' } });

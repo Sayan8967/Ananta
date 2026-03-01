@@ -89,9 +89,9 @@ export class ClinicalNotesService {
         coding: [{
           system: 'http://loinc.org',
           code: '11506-3',
-          display: note.noteType,
+          display: note.noteType ?? undefined,
         }],
-        text: note.noteType,
+        text: note.noteType ?? undefined,
       },
       subject: { reference: `Patient/${patientId}` },
       author: [{ reference: `Practitioner/${doctorId}` }],
@@ -101,7 +101,7 @@ export class ClinicalNotesService {
         attachment: {
           contentType: 'text/plain',
           data: Buffer.from(note.content).toString('base64'),
-          title: note.noteType,
+          title: note.noteType ?? undefined,
           creation: note.encounterDate?.toISOString(),
         },
       }],

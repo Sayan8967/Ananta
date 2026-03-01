@@ -29,7 +29,7 @@ export async function emergencyCardRoutes(app: FastifyInstance) {
   const service = new EmergencyCardService();
 
   // POST /api/v1/emergency/cards - Generate emergency card (patient-auth required)
-  app.post('/cards', async (request: FastifyRequest, reply: FastifyReply) => {
+  app.post('/cards', async (request, reply) => {
     const user = await requireAuth(request, reply);
     if (!user) return;
 
@@ -46,9 +46,7 @@ export async function emergencyCardRoutes(app: FastifyInstance) {
   });
 
   // GET /api/v1/emergency/cards/:accessCode - View emergency card (NO auth - access code is authentication)
-  app.get('/cards/:accessCode', async (request: FastifyRequest<{
-    Params: { accessCode: string };
-  }>, reply: FastifyReply) => {
+  app.get<{ Params: { accessCode: string } }>('/cards/:accessCode', async (request, reply) => {
     const card = await service.getByAccessCode(request.params.accessCode);
 
     if (!card) {
@@ -60,9 +58,7 @@ export async function emergencyCardRoutes(app: FastifyInstance) {
   });
 
   // DELETE /api/v1/emergency/cards/:cardId - Revoke card (patient-auth required)
-  app.delete('/cards/:cardId', async (request: FastifyRequest<{
-    Params: { cardId: string };
-  }>, reply: FastifyReply) => {
+  app.delete<{ Params: { cardId: string } }>('/cards/:cardId', async (request, reply) => {
     const user = await requireAuth(request, reply);
     if (!user) return;
 

@@ -16,10 +16,10 @@ export async function buildApp() {
   await app.register(consentRoutes, { prefix: '/api/v1/auth/consent' });
   await app.register(sessionRoutes, { prefix: '/api/v1/auth' });
 
-  app.setErrorHandler((error, _request, reply) => {
+  app.setErrorHandler((error: Error & { statusCode?: number; code?: string }, _request, reply) => {
     logger.error({ err: error }, 'Request error');
-    reply.code((error as any).statusCode || 500).send({
-      error: { code: (error as any).code || 'INTERNAL_ERROR', message: error.message },
+    reply.code(error.statusCode || 500).send({
+      error: { code: error.code || 'INTERNAL_ERROR', message: error.message },
     });
   });
   return app;

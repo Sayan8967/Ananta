@@ -1,7 +1,8 @@
 "use client";
 
+import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useState, useCallback, useEffect, createContext, useContext, type ReactNode } from "react";
+import { useState, useCallback, useEffect, createContext, useContext } from "react";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import { initKeycloak, getToken, getUserRoles } from "@/lib/auth";
 
@@ -73,7 +74,7 @@ export function useAuth() {
   return context;
 }
 
-function AuthProvider({ children }: { children: ReactNode }) {
+function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isInitialized, setIsInitialized] = useState(false);
   const { setUser, clearUser, isAuthenticated } = useAuthStore();
 
@@ -146,7 +147,7 @@ function AuthProvider({ children }: { children: ReactNode }) {
 // Combined Providers
 // ============================================================================
 
-export function Providers({ children }: { children: ReactNode }) {
+export function Providers({ children }: { children: React.ReactNode }) {
   const queryClient = getQueryClient();
 
   return (

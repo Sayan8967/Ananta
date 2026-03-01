@@ -40,13 +40,13 @@ export async function buildApp() {
   await app.register(prescriptionRoutes, { prefix: '/api/v1/patient/patients' });
 
   // Global error handler
-  app.setErrorHandler((error, request, reply) => {
+  app.setErrorHandler((error: Error & { statusCode?: number; code?: string }, request, reply) => {
     logger.error({ err: error, url: request.url }, 'Request error');
 
-    const statusCode = (error as any).statusCode || 500;
+    const statusCode = error.statusCode || 500;
     reply.code(statusCode).send({
       error: {
-        code: (error as any).code || 'INTERNAL_ERROR',
+        code: error.code || 'INTERNAL_ERROR',
         message: error.message || 'Internal server error',
       },
     });

@@ -1,10 +1,10 @@
 FROM node:20-alpine AS builder
-RUN corepack enable && corepack prepare pnpm@9 --activate
+RUN corepack enable && corepack prepare pnpm@10 --activate
 WORKDIR /app
 COPY package.json pnpm-workspace.yaml turbo.json tsconfig.base.json ./
 COPY app/packages/fhir-models/package.json app/packages/fhir-models/
 COPY app/web/package.json app/web/
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --no-frozen-lockfile
 COPY app/packages/fhir-models/ app/packages/fhir-models/
 COPY app/web/ app/web/
 RUN pnpm --filter @ananta/fhir-models build && pnpm --filter @ananta/web build

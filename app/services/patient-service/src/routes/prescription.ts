@@ -1,4 +1,4 @@
-import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import type { FastifyInstance } from 'fastify';
 import { checkRole, ROLES } from '@ananta/auth-client';
 import { PrescriptionService } from '../services/prescription-service.js';
 import { z } from 'zod';
@@ -19,9 +19,9 @@ export async function prescriptionRoutes(app: FastifyInstance) {
   const service = new PrescriptionService();
 
   // Upload prescription image
-  app.post('/:patientId/prescriptions', {
+  app.post<{ Params: { patientId: string } }>('/:patientId/prescriptions', {
     preHandler: [checkRole(ROLES.PATIENT, ROLES.DOCTOR)],
-  }, async (request: FastifyRequest<{ Params: { patientId: string } }>, reply: FastifyReply) => {
+  }, async (request, reply) => {
     // In production, this would handle multipart file upload to S3
     // For MVP, accept a JSON body with imageUrl
     const body = request.body as { imageUrl: string };
@@ -35,16 +35,16 @@ export async function prescriptionRoutes(app: FastifyInstance) {
   });
 
   // List prescriptions
-  app.get('/:patientId/prescriptions', {
+  app.get<{ Params: { patientId: string } }>('/:patientId/prescriptions', {
     preHandler: [checkRole(ROLES.PATIENT, ROLES.DOCTOR)],
-  }, async (request: FastifyRequest<{ Params: { patientId: string } }>) => {
+  }, async (request) => {
     return service.listByPatient(request.params.patientId);
   });
 
   // Get prescription with OCR status
-  app.get('/:patientId/prescriptions/:id', {
+  app.get<{ Params: { patientId: string; id: string } }>('/:patientId/prescriptions/:id', {
     preHandler: [checkRole(ROLES.PATIENT, ROLES.DOCTOR)],
-  }, async (request: FastifyRequest<{ Params: { patientId: string; id: string } }>, reply: FastifyReply) => {
+  }, async (request, reply) => {
     const prescription = await service.getById(request.params.id);
     if (!prescription) {
       reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'Prescription not found' } });
@@ -54,9 +54,9 @@ export async function prescriptionRoutes(app: FastifyInstance) {
   });
 
   // Confirm extracted medications from prescription
-  app.post('/:patientId/prescriptions/:id/confirm', {
+  app.post<{ Params: { patientId: string; id: string } }>('/:patientId/prescriptions/:id/confirm', {
     preHandler: [checkRole(ROLES.PATIENT, ROLES.DOCTOR)],
-  }, async (request: FastifyRequest<{ Params: { patientId: string; id: string } }>, reply: FastifyReply) => {
+  }, async (request, reply) => {
     const body = confirmSchema.parse(request.body);
     const result = await service.confirmExtraction(
       request.params.patientId,

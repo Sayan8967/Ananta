@@ -1,4 +1,4 @@
-import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import type { FastifyInstance } from 'fastify';
 import { checkRole, ROLES } from '@ananta/auth-client';
 import { PatientService } from '../services/patient-service.js';
 import { z } from 'zod';
@@ -26,7 +26,7 @@ export async function patientRoutes(app: FastifyInstance) {
   // GET /me - current patient profile
   app.get('/me', {
     preHandler: [checkRole(ROLES.PATIENT)],
-  }, async (request: FastifyRequest, reply: FastifyReply) => {
+  }, async (request, reply) => {
     const patientId = request.user!.ananta_patient_id || request.user!.sub;
     const patient = await service.getByFhirId(patientId);
     if (!patient) {
@@ -39,16 +39,16 @@ export async function patientRoutes(app: FastifyInstance) {
   // POST / - create patient
   app.post('/', {
     preHandler: [checkRole(ROLES.PATIENT, ROLES.ADMIN, ROLES.DOCTOR)],
-  }, async (request: FastifyRequest, reply: FastifyReply) => {
+  }, async (request, reply) => {
     const body = createPatientSchema.parse(request.body);
     const patient = await service.create(body, request.user!.sub);
     reply.code(201).send(patient);
   });
 
   // GET /:id - get patient by ID
-  app.get('/:id', {
+  app.get<{ Params: { id: string } }>('/:id', {
     preHandler: [checkRole(ROLES.PATIENT, ROLES.DOCTOR, ROLES.ADMIN)],
-  }, async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
+  }, async (request, reply) => {
     const patient = await service.getById(request.params.id);
     if (!patient) {
       reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'Patient not found' } });
@@ -58,9 +58,9 @@ export async function patientRoutes(app: FastifyInstance) {
   });
 
   // PUT /:id - update patient
-  app.put('/:id', {
+  app.put<{ Params: { id: string } }>('/:id', {
     preHandler: [checkRole(ROLES.PATIENT, ROLES.ADMIN)],
-  }, async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
+  }, async (request, reply) => {
     const body = updatePatientSchema.parse(request.body);
     const patient = await service.update(request.params.id, body, request.user!.sub);
     if (!patient) {
@@ -71,9 +71,9 @@ export async function patientRoutes(app: FastifyInstance) {
   });
 
   // GET / - list patients (doctor/admin)
-  app.get('/', {
+  app.get<{ Querystring: { q?: string; limit?: string; offset?: string } }>('/', {
     preHandler: [checkRole(ROLES.DOCTOR, ROLES.ADMIN)],
-  }, async (request: FastifyRequest<{ Querystring: { q?: string; limit?: string; offset?: string } }>) => {
+  }, async (request) => {
     const { q, limit = '20', offset = '0' } = request.query;
     return service.search(q, parseInt(limit, 10), parseInt(offset, 10));
   });

@@ -20,7 +20,8 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./db/postgres/migrations:/docker-entrypoint-initdb.d
+      - ./db/postgres/migrations:/docker-entrypoint-initdb.d/01-schema
+      - ./db/postgres/seed:/docker-entrypoint-initdb.d/02-seed
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ananta}"]
       interval: 10s
@@ -67,7 +68,7 @@ services:
     image: quay.io/keycloak/keycloak:24.0
     container_name: ananta-keycloak
     restart: unless-stopped
-    command: start --optimized --import-realm
+    command: start-dev --import-realm
     environment:
       KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?Set KEYCLOAK_ADMIN_PASSWORD in .env}

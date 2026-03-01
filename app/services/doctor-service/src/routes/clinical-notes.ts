@@ -1,4 +1,4 @@
-import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import type { FastifyInstance } from 'fastify';
 import { checkRole, ROLES } from '@ananta/auth-client';
 import { ClinicalNotesService } from '../services/clinical-notes-service.js';
 import { z } from 'zod';
@@ -13,9 +13,9 @@ export async function clinicalNotesRoutes(app: FastifyInstance) {
   const service = new ClinicalNotesService();
 
   // POST /api/v1/doctor/patients/:patientId/notes - Create clinical note (doctor only)
-  app.post('/patients/:patientId/notes', {
+  app.post<{ Params: { patientId: string } }>('/patients/:patientId/notes', {
     preHandler: [checkRole(ROLES.DOCTOR)],
-  }, async (request: FastifyRequest<{ Params: { patientId: string } }>, reply: FastifyReply) => {
+  }, async (request, reply) => {
     const body = createNoteSchema.parse(request.body);
     const note = await service.create(
       request.params.patientId,
@@ -26,12 +26,12 @@ export async function clinicalNotesRoutes(app: FastifyInstance) {
   });
 
   // GET /api/v1/doctor/patients/:patientId/notes - List notes for patient (doctor/admin)
-  app.get('/patients/:patientId/notes', {
-    preHandler: [checkRole(ROLES.DOCTOR, ROLES.ADMIN)],
-  }, async (request: FastifyRequest<{
+  app.get<{
     Params: { patientId: string };
     Querystring: { limit?: string; offset?: string };
-  }>) => {
+  }>('/patients/:patientId/notes', {
+    preHandler: [checkRole(ROLES.DOCTOR, ROLES.ADMIN)],
+  }, async (request) => {
     const { limit = '20', offset = '0' } = request.query;
     return service.listByPatient(
       request.params.patientId,
